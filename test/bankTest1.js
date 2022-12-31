@@ -103,30 +103,26 @@ contract('BankContract', ([deployer, participant1, participant2]) => {
         })
 
         it('checking staking balances', async () => {
-            let balance =  bankContract.getStakingBalance({from:participant1})
-            balance.then(val => {
-                assert.equal(val, stakeTokens1)
-            })           
-            balance = token.balanceOf(participant1)
-            balance.then(val => {
-                assert.equal(val, 0)
-            })
+            let balance =  await bankContract.getStakingBalance({from:participant1})
+            assert.equal(balance, stakeTokens1)  
 
-            balance = bankContract.getStakingBalance({from:participant2})
-            balance.then(val => {
-                assert.equal(val, stakeTokens2)
-            })
-            balance = token.balanceOf(participant2)
-            balance.then(val => {
-                assert.equal(val, 0)
-            })
+            balance = await token.balanceOf(participant1)
+            assert.equal(balance, 0)
+
+            balance = await bankContract.getStakingBalance({from:participant2})
+            assert.equal(balance, stakeTokens2)
+
+            balance = await token.balanceOf(participant2)
+            assert.equal(balance, 0)
 
             // 1000 + 4000
-            balance = bankContract.getCurrentStakedBalance()
-            balance.then(val => {
-                assert.equal(val, tokens(5000))
-            })
-
+            balance = await bankContract.getCurrentStakedBalance()
+            assert.equal(balance, tokens(5000))
+            /*
+                balance.then(val => {
+                    assert.equal(val, tokens(5000))
+                })
+            */
         }) 
     
         it('try to withdraw in deposit period', async () => {
@@ -183,10 +179,8 @@ contract('BankContract', ([deployer, participant1, participant2]) => {
         })
 
         it('check Bank Owner\'s remaining reward', async () => {
-            let remainingRewards = bankContract.getRemainingRewardSupply()
-            remainingRewards.then(val => {
-                assert.equal(val, tokens(500))
-            })
+            let remainingRewards = await bankContract.getRemainingRewardSupply()
+            assert.equal(remainingRewards, tokens(500))
         })
 
         it ('bank owner claims remaining reward', async()=>{           
@@ -202,29 +196,21 @@ contract('BankContract', ([deployer, participant1, participant2]) => {
         let balance 
 
         it('participant 1 withdrew the required amount', async () => {
-            balance = bankContract.getWithdrawnStakeWithReward({from:participant1})
-            balance.then(val => {
-                assert.equal(val, expectedBalance1)
-            })
+            balance = await bankContract.getWithdrawnStakeWithReward({from:participant1})
+            assert.equal(balance, expectedBalance1)
         })   
         it('participant 1 new account balance', async () => {
-            let balance = token.balanceOf(participant1)
-            balance.then(val => {
-                assert.equal(val, expectedBalance1)
-            })
+            let balance = await token.balanceOf(participant1)
+            assert.equal(balance, expectedBalance1)
         }) 
  
         it('participant 2 withdrew the required amount', async () => {
-            let balance = bankContract.getWithdrawnStakeWithReward({from:participant2})
-            balance.then(val => {
-                assert.equal(val, expectedBalance2)
-            })
+            let balance = await bankContract.getWithdrawnStakeWithReward({from:participant2})
+            assert.equal(balance, expectedBalance2)
         }) 
         it('participant 2 new account balance', async () => {
-            let balance = token.balanceOf(participant2)
-            balance.then(val => {
-                assert.equal(val, expectedBalance2)
-            })
+            let balance = await token.balanceOf(participant2)
+            assert.equal(balance, expectedBalance2)
         }) 
 
         it('confirm there are no remaining rewards in the pool', async () => {

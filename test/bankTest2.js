@@ -102,29 +102,21 @@ contract('BankContract', ([deployer, participant1, participant2]) => {
         })
 
         it('checking staking balances', async () => {
-            let balance =  bankContract.getStakingBalance({from:participant1})
-            balance.then(val => {
-                assert.equal(val, stakeTokens1)
-            })           
-            balance = token.balanceOf(participant1)
-            balance.then(val => {
-                assert.equal(val, 0)
-            })
+            let balance =  await bankContract.getStakingBalance({from:participant1})
+            assert.equal(balance, stakeTokens1)
 
-            balance = bankContract.getStakingBalance({from:participant2})
-            balance.then(val => {
-                assert.equal(val, stakeTokens2)
-            })
-            balance = token.balanceOf(participant2)
-            balance.then(val => {
-                assert.equal(val, 0)
-            })
+            balance = await token.balanceOf(participant1)
+            assert.equal(balance, 0)
+
+            balance = await bankContract.getStakingBalance({from:participant2})
+            assert.equal(balance, stakeTokens2)
+
+            balance = await token.balanceOf(participant2)
+            assert.equal(balance, 0)
 
             // 2000 + 5000
-            balance = bankContract.getCurrentStakedBalance()
-            balance.then(val => {
-                assert.equal(val, tokens(7000))
-            })
+            balance = await bankContract.getCurrentStakedBalance()
+            assert.equal(balance, tokens(7000))
 
         }) 
     

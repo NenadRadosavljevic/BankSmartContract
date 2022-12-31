@@ -135,13 +135,12 @@ contract BankContract is Ownable, Pausable, ReentrancyGuard {
         whenNotPaused
         nonReentrant
     { 
-        uint t_now = block.timestamp;
-        require(t_now >= t_zero, "Deposit period is not started yet!");      
-        require(t_now < t_deposit_period_end, "Deposit period expired!"); 
+        require(block.timestamp >= t_zero, "Deposit period is not started yet!");      
+        require(block.timestamp < t_deposit_period_end, "Deposit period expired!"); 
         require(stakers[msg.sender].depositTime == 0, "You've already participated!");
         
         // update the participant staking info
-        stakers[msg.sender].depositTime = t_now;
+        stakers[msg.sender].depositTime = block.timestamp;
         stakers[msg.sender].amount = _amount;
         // update the staking global info
         stakersCount++;
@@ -152,7 +151,7 @@ contract BankContract is Ownable, Pausable, ReentrancyGuard {
         if (!success) {
             revert TokenTransferFailed(); 
         }    
-        emit Staked(msg.sender, _amount, t_now);
+        emit Staked(msg.sender, _amount, block.timestamp);
     }
 
     // called by participants to unstake and get reward
@@ -161,23 +160,22 @@ contract BankContract is Ownable, Pausable, ReentrancyGuard {
         whenNotPaused
         nonReentrant
     { 
-        uint t_now = block.timestamp;
-        require(t_lock_period_end <= t_now, "Withdraw period is not started yet!");      
+        require(t_lock_period_end <= block.timestamp, "Withdraw period is not started yet!");      
         require(stakers[msg.sender].depositTime != 0, "You haven't been participant!");
         require(stakers[msg.sender].withdrawTime == 0, "You've already withdraw the funds!");
 
         uint reward = calculateReward();
 
         // update the participant staking info
-        stakers[msg.sender].withdrawTime = t_now;
+        stakers[msg.sender].withdrawTime = block.timestamp;
         stakers[msg.sender].reward = reward;
         // update the staking global info
         stakersCount--;
         totalStakedBalance -= stakers[msg.sender].amount;
         // remainingRewardSupply -= reward;
         withdrawnRewards += reward;
-        // always store max time - proveri ovo kako radi na ethereum-u
-        t_last_withdraw = t_now >= t_last_withdraw ? t_now : t_last_withdraw;
+        // update last time when participant withdrew funds
+        t_last_withdraw = block.timestamp;
         // calculate amount to transfer
         uint sum_amount = stakers[msg.sender].amount + reward;
         //transfering tokens, participant stake and reward
@@ -185,7 +183,7 @@ contract BankContract is Ownable, Pausable, ReentrancyGuard {
         if (!success) {
             revert TokenTransferFailed(); 
         }    
-        emit UnstakedAndRewarded(msg.sender, sum_amount, t_now);
+        emit UnstakedAndRewarded(msg.sender, sum_amount, block.timestamp);
     }
 
     function calculateReward() 
@@ -201,19 +199,17 @@ contract BankContract is Ownable, Pausable, ReentrancyGuard {
         // remaining unlocked tokens for rewards in subpool
         uint256 SubPoolSupply;
 
-        uint t_now = block.timestamp;
-
-        if(t_lock_period_end <= t_now && t_now < t_withdraw_r1_period_end)
+        if(t_lock_period_end <= block.timestamp && block.timestamp < t_withdraw_r1_period_end)
         {
             // R1 - unlocked 20% pool for rewards
             SubPoolSupply = totalRewardSupply*R1/R - withdrawnRewards;
         } 
-        else if(t_withdraw_r1_period_end <= t_now && t_now < t_withdraw_r2_period_end)
+        else if(t_withdraw_r1_period_end <= block.timestamp && block.timestamp < t_withdraw_r2_period_end)
         {
             // R2 + remainder R1 = unlocked 20% + 30% - already withdrawn rewards
             SubPoolSupply = totalRewardSupply*(R1+R2)/R - withdrawnRewards;
         }
-        else if(t_withdraw_r2_period_end <= t_now)
+        else if(t_withdraw_r2_period_end <= block.timestamp)
         {
             // R3 + remainders R1 and R2 = unlocked 20% + 30% + 50% - already withdrawn rewards
             SubPoolSupply = totalRewardSupply - withdrawnRewards;
@@ -231,8 +227,7 @@ contract BankContract is Ownable, Pausable, ReentrancyGuard {
         whenNotPaused
         nonReentrant
     {
-        uint t_now = block.timestamp;
-        require(t_withdraw_r2_period_end < t_now, "Bank owner can't withdraw before R3 period starts.");
+        require(t_withdraw_r2_period_end < block.timestamp, "Bank owner can't withdraw before R3 period starts.");
         require(stakersCount == 0, "Not all stakers left the pool."); 
         require(t_last_withdraw < t_withdraw_r2_period_end, "There were withdraws in R3 period.");
         require(token.balanceOf(address(this)) > 0, "No more tokens left in the pool.");
@@ -245,7 +240,7 @@ contract BankContract is Ownable, Pausable, ReentrancyGuard {
         if (!success) {
             revert TokenTransferFailed(); 
         }    
-        emit BankTokensWithdrawn(msg.sender, remainingRewardSupply, t_now);
+        emit BankTokensWithdrawn(msg.sender, remainingRewardSupply, block.timestamp);
     }
 
     function getCurrentNumberOfParticipants() public view returns(uint256){
