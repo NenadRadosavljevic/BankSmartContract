@@ -18,6 +18,49 @@ npm install @truffle/hdwallet-provider
 * To run the test, use the command: `truffle test`
 There are three different test scenarios in a test folder. The first one is the same as described in the project task example.
 
+Test output for the first one `truffle test test/bankTest1.js`
+```
+  Contract: BankContract
+    Check starting balances
+      ✔ participant 1 has tokens
+      ✔ participant 2 has tokens
+    ERC20 Token deployment
+      ✔ has a name
+    Bank Contract deployment
+      ✔ has a name
+      ✔ contract has tokens
+      ✔ contract initialization is successful (60ms)
+      ✔ Bank contract is activated
+    Deposit period
+      ✔ staking tokens by participants (672ms)
+      ✔ checking staking balances (40ms)
+      ✔ try to withdraw in deposit period (824ms)
+    Lock period
+      ✔ wait to start lock period
+      ✔ try to deposit in lock period
+      ✔ try to withdraw in lock period
+      ✔ check number of participants
+    withdraw R1 period
+      ✔ wait to start R1 period
+      ✔ participant 1, unstake and claims reward (283ms)
+    withdraw R2 period
+      ✔ wait to start R2 period
+      ✔ participant 2, unstake and claims reward (280ms)
+    withdraw R3 period
+      ✔ wait to start R3 period
+      ✔ check Bank Owner's remaining reward
+      ✔ bank owner claims remaining reward (204ms)
+    Check new balances and rewards
+      ✔ participant 1 withdrew the required amount
+      ✔ participant 1 new account balance
+      ✔ participant 2 withdrew the required amount
+      ✔ participant 2 new account balance
+      ✔ confirm there are no remaining rewards in the pool
+
+
+  26 passing (3s)
+```
+
 ## Deployment to the Ethereum test network
 * Deployment script for the ERC20 token and Bank Smart Contract is in `/migrations/2_deploy_contracts.js`.
 * Configuration for the test networks and the providers are in `truffle-config.js`.
